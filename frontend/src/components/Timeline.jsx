@@ -10,7 +10,8 @@ import { fmtTime, round3 } from '../utils.js'
  *   selectedId    highlighted annotation id
  *   highlightIds  extra annotation ids outlined (quality-check issues)
  *   focusRange    {start,end} range emphasized (quality-check location)
- *   focusVariant  'quality' (default, red dashed) or 'quote' (green solid)
+ *   focusVariant  'quality' (default, red dashed), 'quote' (green solid)
+ *                 or 'speaking' (amber solid)
  *   onSelect(a)   called when the user finishes dragging a range
  *   onClickItem(id)
  *   onBackgroundClick()  click on empty track (clears issue highlight)

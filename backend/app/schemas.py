@@ -87,3 +87,14 @@ class QuoteSearchRequest(BaseModel):
     speaker: str | None = None
     caseSensitive: bool = False
     document: DocumentIn | None = None
+
+
+# ---------- speaking time ----------
+
+class SpeakingStatsRequest(BaseModel):
+    """Per-speaker solo / overlap speaking time.
+
+    ``document`` may carry the editor's current (possibly unsaved) document;
+    otherwise the saved project document is analyzed.
+    """
+    document: DocumentIn | None = None

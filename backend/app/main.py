@@ -9,7 +9,7 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 
-from . import db, importer, quality, quotes, rules
+from . import db, importer, quality, quotes, rules, speaking
 from .merge import merge_documents
 from .schemas import (
     DocumentIn,
@@ -21,6 +21,7 @@ from .schemas import (
     QuoteSearchRequest,
     RuleIn,
     RulePreviewRequest,
+    SpeakingStatsRequest,
 )
 
 app = FastAPI(title="访谈音频校注", version="1.0.0")
@@ -188,6 +189,24 @@ def quote_search(project_id: str, payload: QuoteSearchRequest) -> dict:
             document, payload.query, payload.speaker, payload.caseSensitive)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
+    result["projectId"] = project_id
+    result["projectName"] = project["name"]
+    return result
+
+
+# ---------- speaking time ----------
+
+@app.post("/api/projects/{project_id}/speaking-time")
+def speaking_time(project_id: str, payload: SpeakingStatsRequest | None = None) -> dict:
+    """Per-speaker solo / overlap speaking time from transcript segments.
+
+    Analyzes the document carried in the request (the editor's current,
+    possibly unsaved state) or, when omitted, the saved project document.
+    """
+    project = _get_or_404(project_id)
+    document = _doc(payload.document) if payload is not None \
+        and payload.document is not None else project["document"]
+    result = speaking.speaking_stats(document)
     result["projectId"] = project_id
     result["projectName"] = project["name"]
     return result

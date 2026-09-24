@@ -91,4 +91,11 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ query, speaker, caseSensitive, document }),
     }),
+
+  // ----- speaking time -----
+  speakingTime: (projectId, document = null) =>
+    request(`/projects/${projectId}/speaking-time`, {
+      method: 'POST',
+      body: JSON.stringify({ document }),
+    }),
 };
