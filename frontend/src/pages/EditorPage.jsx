@@ -5,6 +5,7 @@ import Timeline from '../components/Timeline.jsx'
 import SegmentList from '../components/SegmentList.jsx'
 import AnnotationModal from '../components/AnnotationModal.jsx'
 import QuoteSearch from '../components/QuoteSearch.jsx'
+import SpeakingDurations from '../components/SpeakingDurations.jsx'
 import {
   clone, downloadJson, emptyDocument, makeAnnotation, makeSegment, round3,
 } from '../utils.js'
@@ -22,6 +23,7 @@ export default function EditorPage() {
   const [modal, setModal] = useState(null) // { initial }
   const [qualityFocus, setQualityFocus] = useState(null) // {annId,range}
   const [quoteFocus, setQuoteFocus] = useState(null) // {range,speaker}
+  const [speakingFocus, setSpeakingFocus] = useState(null) // {range,speakers}
   const importRef = useRef(null)
   const timelineRef = useRef(null)
 
@@ -51,6 +53,7 @@ export default function EditorPage() {
   const clearQualityFocus = () => {
     setQualityFocus(null)
     setQuoteFocus(null)
+    setSpeakingFocus(null)
     if (searchParams.has('focusStart')) {
       searchParams.delete('ann')
       searchParams.delete('focusStart')
@@ -63,10 +66,21 @@ export default function EditorPage() {
   // and scroll the timeline into view.
   const locateQuote = (match) => {
     setQualityFocus(null)
+    setSpeakingFocus(null)
     setQuoteFocus({
       range: { start: match.start, end: match.end },
       speaker: match.speaker,
     })
+    setTimeout(() => timelineRef.current?.scrollIntoView(
+      { behavior: 'smooth', block: 'center' }), 0)
+  }
+
+  // Clicking a co-speaking interval in the speaking-time panel: emphasize
+  // that interval on the same timeline and scroll it into view.
+  const locateSpeaking = ({ start, end, speakers: activeSpeakers }) => {
+    setQualityFocus(null)
+    setQuoteFocus(null)
+    setSpeakingFocus({ range: { start, end }, speakers: activeSpeakers })
     setTimeout(() => timelineRef.current?.scrollIntoView(
       { behavior: 'smooth', block: 'center' }), 0)
   }
@@ -245,8 +259,12 @@ export default function EditorPage() {
           annotations={doc.annotations}
           selectedId={modal?.initial?.id}
           highlightIds={qualityFocus?.annId ? [qualityFocus.annId] : null}
-          focusRange={(qualityFocus || quoteFocus)?.range || null}
-          focusVariant={quoteFocus ? 'quote' : 'quality'}
+          focusRange={(qualityFocus || quoteFocus || speakingFocus)?.range || null}
+          focusVariant={
+            quoteFocus ? 'quote'
+              : speakingFocus ? 'speaking'
+                : 'quality'
+          }
           onSelect={onTimelineSelect}
           onBackgroundClick={clearQualityFocus}
           onClickItem={(annId) => {
@@ -284,7 +302,22 @@ export default function EditorPage() {
             </button>
           </div>
         )}
+        {speakingFocus && (
+          <div className="qc-focus-hint speaking-focus-hint">
+            <strong>同讲区间定位</strong>
+            <span>
+              {speakingFocus.speakers.join('、')} ·{' '}
+              {speakingFocus.range.start.toFixed(2)}s –{' '}
+              {speakingFocus.range.end.toFixed(2)}s
+            </span>
+            <button className="btn small" onClick={clearQualityFocus}>
+              取消定位
+            </button>
+          </div>
+        )}
       </div>
+
+      <SpeakingDurations segments={doc.segments} onLocate={locateSpeaking} />
 
       <QuoteSearch
         projectId={id}

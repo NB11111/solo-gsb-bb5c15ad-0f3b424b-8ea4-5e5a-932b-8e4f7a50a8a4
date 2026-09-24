@@ -40,6 +40,17 @@ export function round3(n) {
   return Math.round(n * 1000) / 1000;
 }
 
+/**
+ * Format a duration given in seconds: keep up to 3 decimal places
+ * (millisecond precision) and trim trailing zeros.
+ * e.g. 12 -> "12", 12.5 -> "12.5", 3.1415 -> "3.142"
+ */
+export function fmtSeconds(sec) {
+  if (!Number.isFinite(sec)) return '–';
+  const ms = Math.max(0, Math.round(sec * 1000));
+  return (ms / 1000).toFixed(3).replace(/\.?0+$/, '');
+}
+
 /** Download a JSON document in the browser. */
 export function downloadJson(filename, data) {
   const blob = new Blob([JSON.stringify(data, null, 2)], {
